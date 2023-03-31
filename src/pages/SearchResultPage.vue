@@ -1,6 +1,7 @@
 <template>
   <user-card-list :user-list="userList"/>
-  <van-empty v-if="!userList || userList.length < 1" description="数据为空" />
+
+  <van-empty v-if="!userList || userList.length < 1" description="搜索结果为空" />
 
 </template>
 
@@ -8,9 +9,10 @@
 import {onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
 import myAxios from "../plugins/myAxios.ts";
+import qs from "qs";
 import Qs from "qs";
-import UserCardList from "../components/UserCardList.vue";
 import {showFailToast, showSuccessToast, Toast} from "vant";
+import UserCardList from "../components/UserCardList.vue";
 
 const route = useRoute();
 
@@ -19,23 +21,25 @@ const userList = ref([])
 const {tags} = route.query;
 
 onMounted(async () => {
-  const  userListData = await myAxios.get('/user/recommend', {
+  const  userListData = await myAxios.get('/user/search/tags', {
     params: {
-      pageSize: 8,
-      pageNum: 1,
+      tagNameList: tags
+     },
+    paramsSerializer: {
+      serialize: function (params) {
+        return Qs.stringify(params, {arrayFormat: 'repeat'})
+      }
     },
-
   })
       .then(function (response) {
         // 处理成功情况
-        console.log('/user/recommend success', response);
+        console.log('/user/search/tags success', response);
         showSuccessToast('加载成功');
-
-        return response?.data?.records;
+        return response?.data
       })
       .catch(function (error) {
         // 处理错误情况
-        console.log('/user/recommend error', error);
+        console.log('/user/search/tags error', error);
         showFailToast('加载失败');
       })
 
@@ -48,6 +52,7 @@ onMounted(async () => {
     userList.value = userListData;
   }
 })
+
 </script>
 
 <style scoped>
